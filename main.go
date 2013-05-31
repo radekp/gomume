@@ -6,6 +6,11 @@ import (
     "net"
 )
 
+type Session struct {
+    target string
+    door string
+}
+
 func reader(conn net.Conn) {
     var bytes [65535]byte
     buf := bytes[:]    
@@ -19,6 +24,21 @@ func reader(conn net.Conn) {
         os.Stdout.Write(input)
         go log.Write(input)
     }    
+}
+
+func handleSimpleCmd(cmd string) bool {
+    fmt.Printf("handleSimpleCmd %s", cmd);
+    return false
+}
+
+func handleCmdWithArg(cmd, arg string) bool {
+
+    fmt.Printf("handleCmdWithArg %s %s", cmd, arg);
+    
+    switch cmd {
+        case "t": return true
+    }
+    return false
 }
 
 func main() {
@@ -56,8 +76,18 @@ func main() {
         
         newLine = (buf[0] == 10)
         if newLine {
-            if(line[0] == 't' && line[1] == ' ') {
-                debug.Write([]byte("target"));
+            if(len(line) > 1) {
+                if(line[1] == ' ') {
+                    if(handleCmdWithArg(line[0:1], line[2:])) {
+                        line = ""
+                        continue
+                    }
+                }
+            } else if(len(line) == 1) {
+                if(handleSimpleCmd(line)) {
+                    line = ""
+                    continue
+                }
             }
             debug.Write([]byte("newline \r\n"))
             line = ""
@@ -66,15 +96,17 @@ func main() {
         }
         debug.Write([]byte(line))
         debug.Write([]byte("\r\n"))
-                
+
+        fmt.Fprintf(debug, "send> %s\n", string(buf));
+        
         conn.Write(buf)
         
         
         
         //os.Stdout.Write(buf2)
-        for i := 0 ; i < n; i++ {
-            fmt.Printf("key[%d]=%d", i, buf[i])
-        }            
+        //for i := 0 ; i < n; i++ {
+            //fmt.Printf("key[%d]=%d", i, buf[i])
+        //}            
     }
         
     
