@@ -4,9 +4,12 @@ import (
     "os"
     "fmt"
     "net"
+    "strings"
 )
 
 type Session struct {
+    conn net.Conn
+    kmode bool
     target string
     door string
 }
@@ -26,19 +29,46 @@ func reader(conn net.Conn) {
     }    
 }
 
-func handleSimpleCmd(cmd string) bool {
-    fmt.Printf("handleSimpleCmd %s", cmd);
-    return false
+func handleSimpleCmd(ss *Session, line string) string {
+    switch line {
+        case "o", "p", "c", "x", "z":
+            return line + " " + ss.door;
+        case ";", "k", "b":
+            return line + " " + ss.target;
+        case "1":
+            ss.target = "*elf*";
+            return line
+        case "2":
+            ss.target = "*man*";
+            return line
+        case "3":
+            ss.target = "*dwarf*";
+            return line
+        case "4":
+            ss.target = "*hobbit*";
+            return line
+        case "5":
+            ss.target = "*bear*";
+            return line
+        case "ocr", "ccr":
+            ss.door = "crack";
+            return line
+        case "n", "s", "e", "w", "u", "d":
+            return line
+    }
+    return line
 }
 
-func handleCmdWithArg(cmd, arg string) bool {
-
-    fmt.Printf("handleCmdWithArg %s %s", cmd, arg);
-    
+func handleCmdWithArg(ss *Session, line, cmd, arg string) string {
     switch cmd {
-        case "t": return true
+        case "t", ";", "k", "b":
+            ss.target = arg
+            return line
+        case "o", "p", "c", "x", "z":
+            ss.door = arg
+            return line
     }
-    return false
+    return line
 }
 
 func main() {
@@ -52,6 +82,11 @@ func main() {
     if err != nil {
         panic("connect failed")
     }
+
+    // Session object
+    sso := Session{conn, false, "", "exit"}
+    ss := &sso
+    
     go reader(conn)
     
     stdinBuf := make([] byte, 65535)
@@ -63,50 +98,80 @@ func main() {
 
         buf := stdinBuf[:n]
         
-        if newLine {
-            if buf[0] == 49 {
-                //conn.Write([]byte("kill *elf*\r\n"))
-                cmd := make([] byte, 2)
-                cmd[0] = 108
-                cmd[1] = 10
-                conn.Write(cmd)
-                continue
-            }
-        }
-        
+        // Enter
         newLine = (buf[0] == 10)
         if newLine {
-            if(len(line) > 1) {
-                if(line[1] == ' ') {
-                    if(handleCmdWithArg(line[0:1], line[2:])) {
-                        line = ""
-                        continue
-                    }
-                }
-            } else if(len(line) == 1) {
-                if(handleSimpleCmd(line)) {
-                    line = ""
-                    continue
-                }
+            ss.kmode = false
+            debug.Write([]byte("newline before: " + line + "\r\n"))
+            index := strings.Index(line, " ")
+            if(index > 0) {
+                line = handleCmdWithArg(ss, line, line[0:index], line[index + 1:])
+            } else {
+                line = handleSimpleCmd(ss, line)
             }
-            debug.Write([]byte("newline \r\n"))
+            debug.Write([]byte("newline after: " + line + "\r\n"))
+            conn.Write([]byte(line + "\r\n"))
             line = ""
-        } else {
-            line += string(buf[0])
+            continue;
         }
+        
+        // Backspace
+        if(buf[0] == 127) {
+            newLen := len(line) - 1
+            if(newLen >= 0) {
+                line = line[0:newLen]
+                fmt.Printf("\b\b\b   \b\b\b")
+            } else {
+                fmt.Printf("\b\b  \b\b")
+            }
+            continue
+        }
+        
+        // Arrows
+        if(n >= 3 && buf[0] == 27 && buf[1] == 91) {
+            ss.kmode = true
+                switch buf[2] {                   
+                    case 68: conn.Write([]byte("w\n")); fmt.Printf("\b\b\b\bw   \n"); continue;
+                    case 67: conn.Write([]byte("e\n")); fmt.Printf("\b\b\b\be   \n"); continue;
+                    case 65: conn.Write([]byte("n\n")); fmt.Printf("\b\b\b\bn   \n"); continue;
+                    case 66: conn.Write([]byte("s\n")); fmt.Printf("\b\b\b\bs   \n"); continue;
+                }
+        }
+
+        // Binds in key mode
+        /*if(ss.kmode) {
+            switch(buf[0]) {
+                case 'n':  conn.Write([]byte("n\n")); fmt.Printf("\bn\n"); continue;
+                case 's':  conn.Write([]byte("s\n")); fmt.Printf("\bs\n"); continue;
+                case 'e':  conn.Write([]byte("e\n")); fmt.Printf("\be\n"); continue;
+                case 'w':  conn.Write([]byte("w\n")); fmt.Printf("\bw\n"); continue;
+                case 'u':  conn.Write([]byte("u\n")); fmt.Printf("\bu\n"); continue;
+                case 'd':  conn.Write([]byte("d\n")); fmt.Printf("\bd\n"); continue;
+                case 'f':  conn.Write([]byte("f\n")); fmt.Printf("\bflee\n"); continue;
+                case '.':  conn.Write([]byte("label aa\n")); fmt.Printf("\blabel aa\n"); continue;
+                case 'v':  conn.Write([]byte("bash aa\n")); fmt.Printf("\bbash aa\n"); continue;            
+                case ';':  conn.Write([]byte("kill " + ss.target + "\n")); fmt.Printf("\bkill " + ss.target + "\n"); continue;            
+                case 'b':  conn.Write([]byte("bash " + ss.target + "\n")); fmt.Printf("\bbash " + ss.target + "\n"); continue;                        
+            }
+        }*/
+        
+        ss.kmode = false;
+        
+        line += string(buf[0])
         debug.Write([]byte(line))
         debug.Write([]byte("\r\n"))
 
-        fmt.Fprintf(debug, "send> %s\n", string(buf));
+        //fmt.Fprintf(debug, "send> %s\n", string(buf));
+        fmt.Fprintf(debug, "target> %s door> %s\n", ss.target, ss.door);
         
-        conn.Write(buf)
+        //conn.Write(buf)
         
         
         
         //os.Stdout.Write(buf2)
-        //for i := 0 ; i < n; i++ {
-            //fmt.Printf("key[%d]=%d", i, buf[i])
-        //}            
+        for i := 0 ; i < n; i++ {
+            fmt.Fprintf(debug, "key[%d]=%d", i, buf[i])
+        }            
     }
         
     
