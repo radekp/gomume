@@ -47,55 +47,66 @@ func handleSimpleCmd(ss *Session, line string) string {
 		ss.target = "*hobbit*"
 	case "5":
 		ss.target = "*bear*"
-	case "ocr", "ccr":
-		ss.door = "crack"
     case "obo", "cbo":
         ss.door = "boulder";
     case "obr", "cbr":
         ss.door = "brush";
-obr        ==> open brush
-obs        ==> open obsidian
-obu        ==> op bushes
-oca        ==> al o open cask
-oce        ==> op ceiling
-oco        ==> open corner
-ocr        ==> op crack
-od         ==> open exit down
-A large earth troll leaves east.
-A young troll leaves east.
-A young troll leaves east.
-You hear some very close noise from the east.
-
-*** Return: continue, b: back one page, r: redisplay, q: quit (65%) *** oda        ==> open dark
-oe         ==> op exit east
-oee        ==> open exit e
-ogr        ==> op grasses
-oh         ==> open hatch
-oha        ==> op hatch
-ohe        ==> op hedge
-oi         ==> open icedoor
-olo        ==> op looserocks
-oloo       ==> al o open looserocks
-on         ==> open exit north
-oo         ==> al o open 
-ooc        ==> op looserocks
-ooe        ==> open exit e
-opa        ==> al o open panel
-opas       ==> al o open passage
-orf        ==> op rockface
-oro        ==> op rockface
-oru        ==> open runes
-os         ==> open exit south
-ose        ==> op secret
-ost        ==> al o open statuary
-otd        ==> al o open trapdoor
-ote        ==> op tendrils
-oth        ==> open thorns
-oto        ==> op thornbushes
-ou         ==> open exit up
-ow         ==> open exit w
-owa        ==> open wall
-
+    case "oobs", "cobs":
+        ss.door = "obsidian";
+    case "obu", "cbu":
+        ss.door = "bushes";
+    case "oca", "cca":
+        ss.door = "cask";
+    case "oce", "cce":
+        ss.door = "ceiling";
+    case "oco", "cco":
+        ss.door = "corner"
+    case "ocr", "ccr":
+        ss.door = "crack";
+    case "on", "cn":
+        ss.door = "exit north";
+    case "os", "cs":
+        ss.door = "exit south";
+    case "oe", "ce":
+        ss.door = "exit east";
+    case "ow", "cw":
+        ss.door = "exit west";
+    case "ou", "cu":
+        ss.door = "exit up";
+    case "od", "cd":
+        ss.door = "exit down";
+    case "ogr", "cgr":
+        ss.door = "grasses";
+    case "oha", "cha":
+        ss.door = "hatch";
+    case "ohe", "che":
+        ss.door = "hedge";
+    case "oi", "ci":
+        ss.door = "icedoor";
+    case "ooc", "cooc":
+        ss.door = "looserocks";
+    case "opa", "cpa":
+        ss.door = "panel";
+    case "ops", "cps":
+        ss.door = "passage";
+    case "orf", "crf":
+        ss.door = "rockface";
+    case "oru", "cru":
+        ss.door = "runes";
+    case "ose", "cse":
+        ss.door = "secret";
+    case "ost", "cst":
+        ss.door = "statuary";
+    case "otd", "ctd":
+        ss.door = "trapdoor";
+    case "ote", "cte":
+        ss.door = "tendrils";
+    case "oth", "cth":
+        ss.door = "thorns";
+    case "oto", "cto":
+        ss.door = "thornbushes";
+    case "owa", "cwa":
+        ss.door = "wall";
 	case "n", "s", "e", "w", "u", "d":
 		return line
 	}
