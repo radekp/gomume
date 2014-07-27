@@ -35,8 +35,10 @@ func handleSimpleCmd(ss *Session, line string) string {
 	switch line {
 	case "o", "p", "c", "x", "z":
 		return line + " " + ss.door
-	case ";", "k", "b", "j":
+	case ";", "k", "b":
 		return line + " " + ss.target
+    case "t":
+        return "label " + ss.target + " aa";
 	case "1":
 		ss.target = "*elf*"
 	case "2":
