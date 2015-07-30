@@ -58,8 +58,10 @@ func handleSimpleCmd(ss *Session, line string) string {
 		return "lock " + ss.door
 	case "z":
 		return "unlock " + ss.door
-	case ";", "k", "b", "j":
+	case ";", "k", "b":
 		return line + " " + ss.target
+    case "t":
+        return "label " + ss.target + " aa";
 	case "1":
 		return handleTarget(ss, line, "kill", "*elf*");
 	case "2":
