@@ -30,83 +30,108 @@ func reader(conn net.Conn) {
 		go log.Write(input)
 	}
 }
+func handleDoor(ss *Session, line string, door string) string {
+	ss.door = door
+	if line[0] == 'o' {
+		return "open " + door
+	}
+	return "close " + door
+}
+
+func handleTarget(ss *Session, line string, action string, target string) string {
+	ss.target = target
+	return action + " " + target
+}
 
 func handleSimpleCmd(ss *Session, line string) string {
 	switch line {
-	case "o", "p", "c", "x", "z":
-		return line + " " + ss.door
+	case "t":
+		ss.target = "aa"
+		return "label aa"
+	case "o":
+		return "open " + ss.door
+	case "c":
+		return "close " + ss.door
+	case "p":
+		return "pick " + ss.door
+	case "x":
+		return "lock " + ss.door
+	case "z":
+		return "unlock " + ss.door
 	case ";", "k", "b", "j":
 		return line + " " + ss.target
 	case "1":
-		ss.target = "*elf*"
+		return handleTarget(ss, line, "kill", "*elf*");
 	case "2":
-		ss.target = "*man*"
+		return handleTarget(ss, line, "kill", "*man*");
 	case "3":
-		ss.target = "*dwarf*"
+		return handleTarget(ss, line, "kill", "*dwarf*");
 	case "4":
-		ss.target = "*hobbit*"
+		return handleTarget(ss, line, "kill", "*hobbit*");
 	case "5":
-		ss.target = "*bear*"
+		return handleTarget(ss, line, "kill", "*bear*");
+	case "on", "cn":
+		return handleDoor(ss, line, "exit north");
+	case "os", "cs":
+		return handleDoor(ss, line, "exit south");
+	case "oe", "ce":
+		return handleDoor(ss, line, "exit east");
+	case "ow", "cw":
+		return handleDoor(ss, line, "exit west");
+	case "ou", "cu":
+		return handleDoor(ss, line, "exit up");
+	case "od", "cd":
+		return handleDoor(ss, line, "exit down");
     case "obo", "cbo":
-        ss.door = "boulder";
+		return handleDoor(ss, line, "boulder");
     case "obr", "cbr":
-        ss.door = "brush";
+		return handleDoor(ss, line, "brush");
     case "oobs", "cobs":
-        ss.door = "obsidian";
+		return handleDoor(ss, line, "obsidian");
     case "obu", "cbu":
-        ss.door = "bushes";
+		return handleDoor(ss, line, "bushes");
     case "oca", "cca":
-        ss.door = "cask";
+		return handleDoor(ss, line, "cask");
     case "oce", "cce":
-        ss.door = "ceiling";
+		return handleDoor(ss, line, "ceiling");
     case "oco", "cco":
-        ss.door = "corner"
+		return handleDoor(ss, line, "corner");
     case "ocr", "ccr":
-        ss.door = "crack";
-    case "on", "cn":
-        ss.door = "exit north";
-    case "os", "cs":
-        ss.door = "exit south";
-    case "oe", "ce":
-        ss.door = "exit east";
-    case "ow", "cw":
-        ss.door = "exit west";
-    case "ou", "cu":
-        ss.door = "exit up";
-    case "od", "cd":
-        ss.door = "exit down";
+		return handleDoor(ss, line, "crack");
     case "ogr", "cgr":
-        ss.door = "grasses";
+		return handleDoor(ss, line, "grasses");
     case "oha", "cha":
-        ss.door = "hatch";
+        return handleDoor(ss, line, "hatch");
     case "ohe", "che":
-        ss.door = "hedge";
+		return handleDoor(ss, line, "hedge");
     case "oi", "ci":
-        ss.door = "icedoor";
+		return handleDoor(ss, line, "icedoor");
+	case "oro", "cro":
+		return handleDoor(ss, line, "rock");
     case "ooc", "cooc":
-        ss.door = "looserocks";
+		return handleDoor(ss, line, "looserocks");
     case "opa", "cpa":
-        ss.door = "panel";
+		return handleDoor(ss, line, "panel");
     case "ops", "cps":
-        ss.door = "passage";
+		return handleDoor(ss, line, "passage");
     case "orf", "crf":
-        ss.door = "rockface";
+		return handleDoor(ss, line, "rockface");
     case "oru", "cru":
-        ss.door = "runes";
+		return handleDoor(ss, line, "runes");
     case "ose", "cse":
-        ss.door = "secret";
+		return handleDoor(ss, line, "secret");
     case "ost", "cst":
-        ss.door = "statuary";
+		return handleDoor(ss, line, "statuary");
     case "otd", "ctd":
-        ss.door = "trapdoor";
+		return handleDoor(ss, line, "trapdoor");
     case "ote", "cte":
-        ss.door = "tendrils";
+		return handleDoor(ss, line, "tendrils");
     case "oth", "cth":
-        ss.door = "thorns";
+		return handleDoor(ss, line, "thorns");
     case "oto", "cto":
-        ss.door = "thornbushes";
+		return handleDoor(ss, line, "thornbushes");
     case "owa", "cwa":
-        ss.door = "wall";
+		return handleDoor(ss, line, "wall");
 	case "n", "s", "e", "w", "u", "d":
 		return line
 	}
@@ -115,7 +140,10 @@ func handleSimpleCmd(ss *Session, line string) string {
 
 func handleCmdWithArg(ss *Session, line, cmd, arg string) string {
 	switch cmd {
-	case "t", ";", "k", "b":
+	case "t":
+		ss.target = arg
+		return "label " + arg + " aa"
+	case ";", "k", "b":
 		ss.target = arg
 		return line
 	case "o", "p", "c", "x", "z":
@@ -160,11 +188,16 @@ func main() {
 			ss.kmode = false
 			debug.Write([]byte("newline before: " + line + "\r\n"))
 			index := strings.Index(line, " ")
+			oldLine := line
 			if index > 0 {
 				line = handleCmdWithArg(ss, line, line[0:index], line[index+1:])
 			} else {
 				line = handleSimpleCmd(ss, line)
 			}
+			if oldLine != line {		// print command result
+				fmt.Println(line);
+			}
+
 			debug.Write([]byte("newline after: " + line + "\r\n"))
 			conn.Write([]byte(line + "\r\n"))
 			line = ""
