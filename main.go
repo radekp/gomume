@@ -45,8 +45,7 @@ func handleTarget(ss *Session, line string, action string, target string) string
 
 func handleSimpleCmd(ss *Session, line string) string {
 	switch line {
-	case ".":
-	case "t":
+	case ".", "t":
 		ss.target = "aa"
 		return "label aa"
 	case "o":
