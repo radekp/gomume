@@ -45,6 +45,7 @@ func handleTarget(ss *Session, line string, action string, target string) string
 
 func handleSimpleCmd(ss *Session, line string) string {
 	switch line {
+	case ".":
 	case "t":
 		ss.target = "aa"
 		return "label aa"
@@ -60,8 +61,6 @@ func handleSimpleCmd(ss *Session, line string) string {
 		return "unlock " + ss.door
 	case ";", "k", "b":
 		return line + " " + ss.target
-    case "t":
-        return "label " + ss.target + " aa";
 	case "1":
 		return handleTarget(ss, line, "kill", "*elf*");
 	case "2":
